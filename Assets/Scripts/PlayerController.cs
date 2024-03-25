@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class Player : MonoBehaviour
+using UnityEngine.UI;
+public class PlayerController : MonoBehaviour
 {
     public float Speed, Gravity, JumpHeight;
     private CharacterController cc;
@@ -13,41 +13,109 @@ public class Player : MonoBehaviour
     [SerializeField]private float VelocityXZ, VelocityY;
     private Vector3 PlayerPos;
     private bool inWater;
+    public GameObject Cube;
+    Vector3 MousePos;
+    private Vector3 offset;
+    public Text _touchCounter;
     // Start is called before the first frame update yup
     void Start()
     {
         Application.targetFrameRate = 60;
         cc = GetComponent<CharacterController>();
-
-        //Cursor.lockState = CursorLockMode.Locked;
+        // Cursor.lockState = CursorLockMode.Locked;
         //Cursor.visible = false;
     }
-
-    // Update is called once per frame
+     // Update is called once per frame
     void Update()
-    {  
-        //  PlayerMovement(); 
-       // CameraControl();
-        if (Input.GetKeyDown(KeyCode.Space)) Jumping();
-        if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
+    { 
+ #if UNITY_EDITOR_WIN
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+              RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit, 100.0f))
+            {
+                 if (hit.collider.gameObject.tag == "Plane")
+                {
+                    MousePos = hit.point;
+                      Cube.transform.position = MousePos;
+                     print("Hited with plane");
+                 }
+            } 
+        }
+        else if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+             Cube.transform.position = new Vector3(MousePos.x, MousePos.y +2, MousePos.z);
+         }
+#endif
 
-        VelocityXZ = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(PlayerPos.x, 0, PlayerPos.z));
-        VelocityY = Vector3.Distance(new Vector3(0, transform.position.y, 0), new Vector3(0, PlayerPos.y, 0));
-        PlayerPos = transform.position;
+#if UNITY_ANDROID
 
-        //RippleCamera.transform.position = transform.position + Vector3.up * 10;
-       if (isGround.collider) ripple.transform.position = transform.position + transform.forward;
-         else ripple.transform.position = transform.position;
-        Shader.SetGlobalVector("_Player", transform.position);  
-    } 
+    
+
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (Input.GetTouch(0).phase == TouchPhase.Began || Input.GetTouch(0).phase == TouchPhase.Moved)
+            {
+                 // Construct a ray from the current touch coordinates
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(touch.position);  
+                // Create a particle if hit
+                if (Physics.Raycast(ray, out hit, 100.0f))
+                {
+                    if (hit.collider.gameObject.tag == "Plane")
+                    {
+                        _touchCounter.text = "plane hitted";
+                        MousePos = hit.point;
+                        Cube.transform.position = MousePos;
+                    }    
+                }   
+            }  
+
+            //if (hit.collider.gameObject.tag == "Plane")
+            //{
+            //    _touchCounter.text = "hited with plane";
+            //    switch (touch.phase)
+            //    {
+            //        case TouchPhase.Began:
+            //            Cube.transform.position = hit.point;
+            //          
+
+            //            break;
+            //        case TouchPhase.Moved:
+            //            Cube.transform.position = hit.point;
+            //            _touchCounter.text = "Moving";
+            //            break;
+            //    }
+            //}
+        }
+        else
+        {
+            Cube.transform.position = new Vector3(MousePos.x, MousePos.y + 2, MousePos.z);
+        }
+ #endif
+        // PlayerMovement();
+        //  CameraControl();
+        //  if (Input.GetKeyDown(KeyCode.Space)) Jumping();
+        /* 
+    if(Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
+     VelocityXZ = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(PlayerPos.x, 0, PlayerPos.z));
+    VelocityY = Vector3.Distance(new Vector3(0, transform.position.y, 0), new Vector3(0, PlayerPos.y, 0));
+    PlayerPos = transform.position;
+     //RippleCamera.transform.position = transform.position + Vector3.up * 10;
+    if(isGround.collider) ripple.transform.position = transform.position + transform.forward;
+    else ripple.transform.position = transform.position;
+    Shader.SetGlobalVector("_Player", transform.position);
+    */
+    }
     void PlayerMovement()
     {
         Vector3 camRight = Cameraman.transform.right;
         Vector3 camForward = Cameraman.transform.forward;
         camRight.y = 0;
         camForward.y = 0;
-
-        Vector3 move = camRight.normalized * Input.GetAxis("Horizontal") + camForward.normalized * Input.GetAxis("Vertical");
+         Vector3 move = camRight.normalized * Input.GetAxis("Horizontal") + camForward.normalized * Input.GetAxis("Vertical");
         cc.Move(move.normalized * Time.deltaTime * 10 * Speed * ((Input.GetKey(KeyCode.LeftShift)?2:1)));
         if(move.magnitude > 0) transform.forward = move.normalized;
 
