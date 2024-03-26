@@ -55,14 +55,13 @@ public class PlayerController : MonoBehaviour
                     MousePos = hit.point;
                     Cube.transform.position = MousePos;
                     originalPosition = Cube.transform.position;
-                     print("Hited with plane");
-                }
+                 }
             }
          }
         if (Input.GetKeyUp(KeyCode.Mouse0))
         {
             OnMouseUp();
-        }
+         }
  
         if (Input.GetKey(KeyCode.Mouse0))
         {
@@ -70,19 +69,18 @@ public class PlayerController : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, 100.0f))
             {
-                 if (hit.collider.gameObject.tag == "Plane")
+               if (hit.collider.gameObject.tag == "Plane")
                 {
                        MousePos = hit.point;
                        Cube.transform.position = MousePos;
                        OnMouseDrag(MousePos);
-                       print("Hited with plane");
                  }
             } 
         }
         else if (Input.GetKeyUp(KeyCode.Mouse0))
         {
              Cube.transform.position = new Vector3(MousePos.x, MousePos.y +2, MousePos.z);
-        }
+         } 
 #endif
  
 
@@ -135,7 +133,7 @@ public class PlayerController : MonoBehaviour
 
 
     }
-
+ 
     void OnMouseDrag(Vector3 newPosition)
     {
        // Vector3 NewPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f)) + offset;
@@ -152,8 +150,16 @@ public class PlayerController : MonoBehaviour
         if (isDragging)
         {
               Debug.Log("Stopped Dragging");
-        }
+            isDragging = false;
+            StartCoroutine(waitAndturnOn());
+            Cube.GetComponent<Player>().notPositioned = false;
+         } 
     }
- 
- 
+    IEnumerator waitAndturnOn()
+    {
+        yield return new WaitForSeconds(.05f);
+        ripple.gameObject.SetActive(false);
+        Debug.Log("active");
+    }
+
 }
