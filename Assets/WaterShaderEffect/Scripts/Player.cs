@@ -10,12 +10,15 @@ public class Player : MonoBehaviour
     private float CameraY, GravityForce, Zoom = -7;
     private RaycastHit isGround;
     public ParticleSystem ripple;
+    public ParticleSystem ripple2;
     [SerializeField]private float VelocityXZ, VelocityY;
     private Vector3 PlayerPos;
     private bool inWater;
+    public bool notPositioned;
     // Start is called before the first frame update yup
     void Start()
     {
+        notPositioned = false;
         Application.targetFrameRate = 60;
         cc = GetComponent<CharacterController>();
 
@@ -30,18 +33,35 @@ public class Player : MonoBehaviour
        // CameraControl();
         //if (Input.GetKeyDown(KeyCode.Space)) Jumping();
         //if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
-         if(PlayerController.Instance.isDragging)
+        if(PlayerController.Instance.isDragging)
         {
             VelocityXZ = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(PlayerPos.x, 0, PlayerPos.z));
             VelocityY = Vector3.Distance(new Vector3(0, transform.position.y, 0), new Vector3(0, PlayerPos.y, 0));
-            PlayerPos = transform.position;
+            PlayerPos = transform.position; 
             //RippleCamera.transform.position = transform.position + Vector3.up * 10;
-            if (isGround.collider) ripple.transform.position = transform.position + transform.forward;
-            else ripple.transform.position = transform.position;
+            if (isGround.collider)  
+                print("collider");
+            // ripple.transform.position = transform.position + transform.forward;
+            else
+            {
+                if (!notPositioned)
+                {
+                      StartCoroutine(waitAndturnOn());
+                      notPositioned = true;
+                }  
+                 ripple.transform.position = transform.position;
+
+            }
             Shader.SetGlobalVector("_Player", transform.position);
-        }
- 
+        } 
+          
      } 
+    IEnumerator waitAndturnOn()
+    {
+        yield return new WaitForSeconds(.01f);
+        ripple.gameObject.SetActive(true);  
+        Debug.Log("active");  
+     }
     void PlayerMovement()
     {
         Vector3 camRight = Cameraman.transform.right;
@@ -57,8 +77,7 @@ public class Player : MonoBehaviour
         if(isGround.collider && GravityForce < -2) GravityForce = -2;
         else if(GravityForce < -99) GravityForce = -99;
         cc.Move(new Vector3(0, GravityForce * Time.deltaTime, 0));
-
-        if (inWater) ripple.gameObject.SetActive(true);
+         if (inWater) ripple.gameObject.SetActive(true);
         else ripple.gameObject.SetActive(false);
         Physics.Raycast(transform.position, Vector3.down, out isGround, 2.7f, LayerMask.GetMask("Ground"));
         Debug.DrawRay(transform.position, Vector3.down* 2.7f);
@@ -75,7 +94,7 @@ public class Player : MonoBehaviour
         float JumpMutify = 2;
         GravityForce = Mathf.Sqrt(JumpHeight * Gravity * JumpMutify);
         cc.Move(new Vector3(0, GravityForce * Time.deltaTime, 0)); 
-    }
+    } 
     void CameraControl()
     {
         Cameraman.transform.position = transform.position;
@@ -97,19 +116,28 @@ public class Player : MonoBehaviour
 
         for (int i = Start; i < End; i+=Delta)
         {
-            ripple.Emit(transform.position + ripple.transform.forward * 1.15f, ripple.transform.forward * Speed, Size, Lifetime, Color.white);
+            ripple.Emit(transform.position + ripple.transform.forward * 1.15f, ripple.transform.forward * Speed, Size, Lifetime, Color.red);
             ripple.transform.Rotate(Vector3.up * Delta, Space.World);
         }
     }
     private void OnTriggerEnter(Collider other)
     {
-        
+        print("On trigger enter");
         // && !isGround.collider && Mathf.Abs(VelocityY) > 0.1f  && Mathf.Abs(VelocityY) > 0.1f
         if(other.gameObject.layer == 4)
         {
+            print("On trigger enter22");
             //CreateRipple(-180, 180, 2, 5, 3f, 3);
-            ripple.Emit(transform.position, Vector3.zero, 5, 0.1f, Color.white);
-        }
+            // ripple.Emit(transform.position, Vector3.zero, 5, 0.1f, Color.red);
+            var emitParams = new ParticleSystem.EmitParams();
+            emitParams.position = transform.position;   
+            emitParams.startColor = Color.red; 
+             emitParams.startSize = 4f;
+            emitParams.startLifetime = 0.1f;   
+            emitParams.velocity = Vector3.zero;
+            ripple2.Emit(emitParams, 10);   
+            ripple2.Play(); // Continue normal emiss
+         } 
     }
     /*
     private void OnTriggerStay(Collider other)
@@ -121,12 +149,12 @@ public class Player : MonoBehaviour
         }
     }
     */
-    private void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider other)  
     {
         if(other.gameObject.layer == 4)
         {
             //CreateRipple(-180, 180, 2, 5, 3f, 3);
-            ripple.Emit(transform.position, Vector3.zero, 5, 0.1f, Color.white);
+            ripple.Emit(transform.position, Vector3.zero, 5, 0.1f, Color.red);
         }
     }
 }
