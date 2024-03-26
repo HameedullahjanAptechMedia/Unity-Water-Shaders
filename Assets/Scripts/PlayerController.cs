@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
+    public static PlayerController Instance;
     public float Speed, Gravity, JumpHeight;
     private CharacterController cc;
     public GameObject Cameraman, RippleCamera;
@@ -15,10 +16,26 @@ public class PlayerController : MonoBehaviour
     private bool inWater;
     public GameObject Cube;
     Vector3 MousePos;
-    private Vector3 offset;
     public Text _touchCounter;
-    // Start is called before the first frame update yup
-    void Start()
+
+
+    private Vector3 offset;
+     private Vector3 originalPosition;
+    public bool isDragging;
+    public float dragThreshold = 0.1f; // Adjust as needed
+
+
+     // Start is called before the first frame update yup
+
+
+
+
+    private void Awake()
+    {
+        Instance = this;
+        isDragging = false;
+    }
+     void Start()
     {
         Application.targetFrameRate = 60;
         cc = GetComponent<CharacterController>();
@@ -27,33 +44,55 @@ public class PlayerController : MonoBehaviour
     }
      // Update is called once per frame
     void Update()
-    { 
- #if UNITY_EDITOR_WIN
+    {
+#if UNITY_EDITOR_WIN
+       
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit, 100.0f))
+            {
+                if (hit.collider.gameObject.tag == "Plane")
+                {
+                    isDragging = false; 
+                    MousePos = hit.point;
+                    Cube.transform.position = MousePos;
+                    originalPosition = Cube.transform.position;
+                     print("Hited with plane");
+                }
+            }
+         }
+        if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            OnMouseUp();
+        }
+ 
         if (Input.GetKey(KeyCode.Mouse0))
         {
-              RaycastHit hit;
+            RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, 100.0f))
             {
                  if (hit.collider.gameObject.tag == "Plane")
                 {
-                    MousePos = hit.point;
-                      Cube.transform.position = MousePos;
-                     print("Hited with plane");
+                       MousePos = hit.point;
+                       Cube.transform.position = MousePos;
+                       OnMouseDrag(MousePos);
+                       print("Hited with plane");
                  }
             } 
         }
         else if (Input.GetKeyUp(KeyCode.Mouse0))
         {
              Cube.transform.position = new Vector3(MousePos.x, MousePos.y +2, MousePos.z);
-         }
+        }
 #endif
 
+
+        /*
 #if UNITY_ANDROID
-
-    
-
-        if (Input.touchCount > 0)
+          if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
             if (Input.GetTouch(0).phase == TouchPhase.Began || Input.GetTouch(0).phase == TouchPhase.Moved)
@@ -73,42 +112,37 @@ public class PlayerController : MonoBehaviour
                 }   
             }  
 
-            //if (hit.collider.gameObject.tag == "Plane")
-            //{
-            //    _touchCounter.text = "hited with plane";
-            //    switch (touch.phase)
-            //    {
-            //        case TouchPhase.Began:
-            //            Cube.transform.position = hit.point;
-            //          
-
-            //            break;
-            //        case TouchPhase.Moved:
-            //            Cube.transform.position = hit.point;
-            //            _touchCounter.text = "Moving";
-            //            break;
-            //    }
-            //}
-        }
+         }
         else
         {
             Cube.transform.position = new Vector3(MousePos.x, MousePos.y + 2, MousePos.z);
         }
  #endif
-        // PlayerMovement();
-        //  CameraControl();
-        //  if (Input.GetKeyDown(KeyCode.Space)) Jumping();
-        /* 
-    if(Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
-     VelocityXZ = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(PlayerPos.x, 0, PlayerPos.z));
-    VelocityY = Vector3.Distance(new Vector3(0, transform.position.y, 0), new Vector3(0, PlayerPos.y, 0));
-    PlayerPos = transform.position;
-     //RippleCamera.transform.position = transform.position + Vector3.up * 10;
-    if(isGround.collider) ripple.transform.position = transform.position + transform.forward;
-    else ripple.transform.position = transform.position;
-    Shader.SetGlobalVector("_Player", transform.position);
-    */
+          */
+          
+     }
+ 
+    void OnMouseDrag(Vector3 newPosition)
+    {
+       // Vector3 NewPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f)) + offset;
+       //  transform.position = new Vector3(newPosition.x, newPosition.y, transform.position.z);
+        if (!isDragging && Vector3.Distance(originalPosition,Cube.transform.position) > dragThreshold)
+        {
+            isDragging = true;
+            Debug.Log("Started Dragging");
+        }
     }
+
+    void OnMouseUp()
+    {
+        if (isDragging)
+        {
+              Debug.Log("Stopped Dragging");
+        }
+    }
+
+
+
     void PlayerMovement()
     {
         Vector3 camRight = Cameraman.transform.right;

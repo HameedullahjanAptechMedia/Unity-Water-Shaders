@@ -28,18 +28,20 @@ public class Player : MonoBehaviour
     {  
         //  PlayerMovement(); 
        // CameraControl();
-        if (Input.GetKeyDown(KeyCode.Space)) Jumping();
-        if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
-
-        VelocityXZ = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(PlayerPos.x, 0, PlayerPos.z));
-        VelocityY = Vector3.Distance(new Vector3(0, transform.position.y, 0), new Vector3(0, PlayerPos.y, 0));
-        PlayerPos = transform.position;
-
-        //RippleCamera.transform.position = transform.position + Vector3.up * 10;
-       if (isGround.collider) ripple.transform.position = transform.position + transform.forward;
-         else ripple.transform.position = transform.position;
-        Shader.SetGlobalVector("_Player", transform.position);  
-    } 
+        //if (Input.GetKeyDown(KeyCode.Space)) Jumping();
+        //if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
+         if(PlayerController.Instance.isDragging)
+        {
+            VelocityXZ = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(PlayerPos.x, 0, PlayerPos.z));
+            VelocityY = Vector3.Distance(new Vector3(0, transform.position.y, 0), new Vector3(0, PlayerPos.y, 0));
+            PlayerPos = transform.position;
+            //RippleCamera.transform.position = transform.position + Vector3.up * 10;
+            if (isGround.collider) ripple.transform.position = transform.position + transform.forward;
+            else ripple.transform.position = transform.position;
+            Shader.SetGlobalVector("_Player", transform.position);
+        }
+ 
+     } 
     void PlayerMovement()
     {
         Vector3 camRight = Cameraman.transform.right;
@@ -72,7 +74,7 @@ public class Player : MonoBehaviour
         if(GravityForce > 2) return;
         float JumpMutify = 2;
         GravityForce = Mathf.Sqrt(JumpHeight * Gravity * JumpMutify);
-        cc.Move(new Vector3(0, GravityForce * Time.deltaTime, 0));
+        cc.Move(new Vector3(0, GravityForce * Time.deltaTime, 0)); 
     }
     void CameraControl()
     {
