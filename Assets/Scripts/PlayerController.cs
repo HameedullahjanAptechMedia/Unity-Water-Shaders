@@ -46,7 +46,6 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 #if UNITY_EDITOR_WIN
-       
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             RaycastHit hit;
@@ -88,18 +87,35 @@ public class PlayerController : MonoBehaviour
              Cube.transform.position = new Vector3(MousePos.x, MousePos.y +2, MousePos.z);
         }
 #endif
+ 
 
-
-        /*
-#if UNITY_ANDROID
-          if (Input.touchCount > 0)
+#if UNITY_ANDROID 
+        if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            if (Input.GetTouch(0).phase == TouchPhase.Began || Input.GetTouch(0).phase == TouchPhase.Moved)
+            if (Input.GetTouch(0).phase == TouchPhase.Began)
             {
-                 // Construct a ray from the current touch coordinates
                 RaycastHit hit;
-                Ray ray = Camera.main.ScreenPointToRay(touch.position);  
+                Ray ray = Camera.main.ScreenPointToRay(touch.position);
+                // Create a particle if hit
+                if (Physics.Raycast(ray, out hit, 100.0f))
+                {
+                    if (hit.collider.gameObject.tag == "Plane")
+                    {
+                        _touchCounter.text = "plane hitted";
+                        isDragging = false;
+                        MousePos = hit.point;
+                        Cube.transform.position = MousePos;
+                        originalPosition = Cube.transform.position;
+                    }
+                }
+            }
+
+          else  if (Input.GetTouch(0).phase == TouchPhase.Began || Input.GetTouch(0).phase == TouchPhase.Moved)
+            {
+                // Construct a ray from the current touch coordinates
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(touch.position);
                 // Create a particle if hit
                 if (Physics.Raycast(ray, out hit, 100.0f))
                 {
@@ -108,20 +124,21 @@ public class PlayerController : MonoBehaviour
                         _touchCounter.text = "plane hitted";
                         MousePos = hit.point;
                         Cube.transform.position = MousePos;
-                    }    
-                }   
-            }  
-
+                        OnMouseDrag(MousePos);
+                        print("Hited with plane");
+                    } 
+                }
+            }
          }
-        else
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended)
         {
             Cube.transform.position = new Vector3(MousePos.x, MousePos.y + 2, MousePos.z);
-        }
+         }   
  #endif
-          */
-          
-     }
- 
+
+
+    }
+
     void OnMouseDrag(Vector3 newPosition)
     {
        // Vector3 NewPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f)) + offset;
